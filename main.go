@@ -33,6 +33,9 @@ var (
 var rdb *redis.Client
 
 func init() {
+	if redisAddr == "" {
+		panic("REDIS_ADDRESS is not set")
+	}
 	rdb = redis.NewClient(&redis.Options{
 		Addr:     redisAddr,
 		Password: redisPass,
