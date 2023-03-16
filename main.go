@@ -16,6 +16,12 @@ func main() {
 	router.POST("/api_key/submit", func(c *gin.Context) {
 		var api_key typings.APIKeySubmission
 		c.BindJSON(&api_key)
+		if api_key.APIKey == "" {
+			c.JSON(400, gin.H{
+				"error": "API key is empty",
+			})
+			return
+		}
 		// Check if API key is valid
 		creditSummary, err := checks.GetCredits(api_key.APIKey)
 		if err != nil {

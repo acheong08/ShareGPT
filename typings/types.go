@@ -26,9 +26,8 @@ type CreditGrantItem struct {
 type OpenAIError struct {
 	Message string `json:"message"`
 	Type    string `json:"type"`
-	// Param can be null or a string
-	Param string `json:"param"`
-	Code  string `json:"code"`
+	Param   string `json:"param"`
+	Code    string `json:"code"`
 }
 
 type APIKeySubmission struct {
