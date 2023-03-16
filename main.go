@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/acheong08/ShareGPT/checks"
@@ -65,8 +66,60 @@ func main() {
 		// Save to Redis
 		go func(creditSummary typings.CreditSummary) {
 			// Save to Redis
-			rdb.Set(api_key.APIKey, creditSummary.TotalAvailable, 0)
+			err := rdb.Set(api_key.APIKey, creditSummary.TotalAvailable, 0).Err()
+			if err != nil {
+				println(fmt.Errorf("error saving to Redis: %v", err))
+			}
 		}(creditSummary)
 	})
+	router.GET("/api_key/random", func(c *gin.Context) {
+		// Check authentication
+		if c.GetHeader("Authorization") != os.Getenv("AUTHORIZATION") {
+			c.JSON(401, gin.H{
+				"error": "Unauthorized",
+			})
+			return
+		}
+		// Get random API key from Redis
+		key, err := rdb.RandomKey().Result()
+		if err != nil {
+			c.JSON(500, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+		if key == "" {
+			c.JSON(400, gin.H{
+				"error": "No API keys",
+			})
+			return
+		}
+		// Get credit summary
+		creditSummary, err := checks.GetCredits(key)
+		if err != nil {
+			c.JSON(500, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+		if creditSummary.Error.Message != "" {
+			c.JSON(400, gin.H{
+				"error": creditSummary.Error.Message,
+			})
+			return
+		}
+		if creditSummary.TotalAvailable < 0.1 {
+			c.JSON(400, gin.H{
+				"error": "Not enough credits",
+			})
+			return
+		}
+		// Return credit summary
+		c.JSON(200, gin.H{
+			"api_key":        key,
+			"credit_summary": creditSummary,
+		})
+	})
+
 	router.Run()
 }
