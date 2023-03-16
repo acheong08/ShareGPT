@@ -80,7 +80,7 @@ func main() {
 		c.JSON(200, creditSummary)
 		// Save to Redis
 		go func(creditSummary typings.CreditSummary) {
-			// Save to Redis
+			// Save to Redis without expiration
 			err := rdb.Set(api_key.APIKey, creditSummary.TotalAvailable, 0).Err()
 			if err != nil {
 				println(fmt.Errorf("error saving to Redis: %v", err))
