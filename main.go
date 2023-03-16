@@ -1,9 +1,18 @@
 package main
 
 import (
+	"os"
+
 	"github.com/acheong08/ShareGPT/checks"
 	"github.com/acheong08/ShareGPT/typings"
 	gin "github.com/gin-gonic/gin"
+)
+
+var (
+	redisAddr = os.Getenv("REDIS_ADDRESS")
+	redisPass = os.Getenv("REDIS_PASSWORD")
+	redisUser = os.Getenv("REDIS_USERNAME")
+	redisDB   = os.Getenv("REDIS_DB")
 )
 
 func main() {
