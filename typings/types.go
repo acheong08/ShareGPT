@@ -10,8 +10,8 @@ type CreditSummary struct {
 }
 
 type CreditGrant struct {
-	Object string        `json:"object"`
-	Data   []CreditGrant `json:"data"`
+	Object string            `json:"object"`
+	Data   []CreditGrantItem `json:"data"`
 }
 
 type CreditGrantItem struct {
