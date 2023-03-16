@@ -120,6 +120,32 @@ func main() {
 			"credit_summary": creditSummary,
 		})
 	})
-
+	router.POST("/api_key/delete", func(c *gin.Context) {
+		// Delete API key from Redis
+		var api_key typings.APIKeySubmission
+		err := c.BindJSON(&api_key)
+		if err != nil {
+			c.JSON(500, gin.H{
+				"error": "Error binding JSON",
+			})
+			return
+		}
+		if api_key.APIKey == "" {
+			c.JSON(400, gin.H{
+				"error": "API key is empty",
+			})
+			return
+		}
+		err = rdb.Del(api_key.APIKey).Err()
+		if err != nil {
+			c.JSON(500, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+		c.JSON(200, gin.H{
+			"message": "API key deleted",
+		})
+	})
 	router.Run()
 }
