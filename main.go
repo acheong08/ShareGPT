@@ -2,12 +2,27 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"os"
+
+	http "github.com/bogdanfinn/fhttp"
+	tls_client "github.com/bogdanfinn/tls-client"
 
 	"github.com/acheong08/ShareGPT/checks"
 	"github.com/acheong08/ShareGPT/typings"
 	gin "github.com/gin-gonic/gin"
 	"github.com/go-redis/redis"
+)
+
+var (
+	jar     = tls_client.NewCookieJar()
+	options = []tls_client.HttpClientOption{
+		tls_client.WithTimeoutSeconds(360),
+		tls_client.WithClientProfile(tls_client.Chrome_110),
+		tls_client.WithNotFollowRedirects(),
+		tls_client.WithCookieJar(jar), // create cookieJar instance and pass it as argument
+	}
+	client, _ = tls_client.NewHttpClient(tls_client.NewNoopLogger(), options...)
 )
 
 var (
@@ -72,54 +87,6 @@ func main() {
 			}
 		}(creditSummary)
 	})
-	router.GET("/api_key/random", func(c *gin.Context) {
-		// Check authentication
-		if c.GetHeader("Authorization") != os.Getenv("AUTHORIZATION") {
-			c.JSON(401, gin.H{
-				"error": "Unauthorized",
-			})
-			return
-		}
-		// Get random API key from Redis
-		key, err := rdb.RandomKey().Result()
-		if err != nil {
-			c.JSON(500, gin.H{
-				"error": err.Error(),
-			})
-			return
-		}
-		if key == "" {
-			c.JSON(400, gin.H{
-				"error": "No API keys",
-			})
-			return
-		}
-		// Get credit summary
-		creditSummary, err := checks.GetCredits(key)
-		if err != nil {
-			c.JSON(500, gin.H{
-				"error": err.Error(),
-			})
-			return
-		}
-		if creditSummary.Error.Message != "" {
-			c.JSON(400, gin.H{
-				"error": creditSummary.Error.Message,
-			})
-			return
-		}
-		if creditSummary.TotalAvailable < 0.1 {
-			c.JSON(400, gin.H{
-				"error": "Not enough credits",
-			})
-			return
-		}
-		// Return credit summary
-		c.JSON(200, gin.H{
-			"api_key":        key,
-			"credit_summary": creditSummary,
-		})
-	})
 	router.POST("/api_key/delete", func(c *gin.Context) {
 		// Delete API key from Redis
 		var api_key typings.APIKeySubmission
@@ -147,5 +114,61 @@ func main() {
 			"message": "API key deleted",
 		})
 	})
+	router.POST("/v1/chat", proxy)
 	router.Run()
+}
+
+func proxy(c *gin.Context) {
+
+	var url string
+	var err error
+	var request_method string
+	var request *http.Request
+	var response *http.Response
+
+	url = "https://api.openai.com/v1/chat/completions"
+	request_method = c.Request.Method
+
+	request, err = http.NewRequest(request_method, url, c.Request.Body)
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+	request.Header.Set("Host", "api.openai.com")
+	request.Header.Set("Origin", "https://platform.openai.com/playground")
+	request.Header.Set("Content-Type", "application/json")
+	request.Header.Set("Connection", "keep-alive")
+	request.Header.Set("Keep-Alive", "timeout=360")
+	request.Header.Set("user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36")
+	// Authorization
+	var authorization string
+	if c.Request.Header.Get("Authorization") == "" {
+		// Set authorization header from Redis
+		random_key, err := rdb.RandomKey().Result()
+		if err != nil {
+			c.JSON(500, gin.H{"error": "Failed to get random key from Redis"})
+			return
+		}
+		authorization = "Bearer " + random_key
+	} else {
+		// Set authorization header from request
+		authorization = c.Request.Header.Get("Authorization")
+	}
+	request.Header.Set("Authorization", authorization)
+
+	response, err = client.Do(request)
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+	defer response.Body.Close()
+	c.Header("Content-Type", response.Header.Get("Content-Type"))
+	// Get status code
+	c.Status(response.StatusCode)
+	c.Stream(func(w io.Writer) bool {
+		// Write data to client
+		io.Copy(w, response.Body)
+		return false
+	})
+
 }
