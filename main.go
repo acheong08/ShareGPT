@@ -147,6 +147,7 @@ func proxy(c *gin.Context) {
 		random_key, err := rdb.RandomKey().Result()
 		if err != nil {
 			c.JSON(500, gin.H{"error": "Failed to get random key from Redis"})
+			println(err.Error())
 			return
 		}
 		authorization = "Bearer " + random_key
