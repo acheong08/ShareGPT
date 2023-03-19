@@ -69,13 +69,7 @@ func main() {
 			})
 			return
 		}
-		if creditSummary.Error.Message != "" {
-			c.JSON(400, gin.H{
-				"error": creditSummary.Error.Message,
-			})
-			return
-		}
-		if creditSummary.TotalAvailable < 0.1 {
+		if creditSummary.HardLimitUSD < 1 {
 			c.JSON(400, gin.H{
 				"error": "Not enough credits",
 			})
@@ -84,9 +78,9 @@ func main() {
 		// Return credit summary
 		c.JSON(200, creditSummary)
 		// Save to Redis
-		go func(creditSummary typings.CreditSummary) {
+		go func(creditSummary typings.BillingSubscription) {
 			// Save to Redis without expiration
-			err := rdb.Set(api_key.APIKey, creditSummary.TotalAvailable, 0).Err()
+			err := rdb.Set(api_key.APIKey, creditSummary.HardLimitUSD, 0).Err()
 			if err != nil {
 				println(fmt.Errorf("error saving to Redis: %v", err))
 			}
@@ -167,23 +161,10 @@ func proxy(c *gin.Context) {
 			// Check credit
 			creditSummary, err := checks.GetCredits(random_key)
 			if err != nil {
-				c.JSON(500, gin.H{"error": "Could not get key from Redis"})
+				c.JSON(500, gin.H{"error": "OpenAI failed"})
 				return
 			}
-			if creditSummary.Error.Message != "" {
-				c.JSON(500, gin.H{
-					"error": creditSummary.Error.Message,
-				})
-
-				// Remove key from Redis
-				err = rdb.Del(random_key).Err()
-				if err != nil {
-					println(fmt.Errorf("error deleting key from Redis: %v", err))
-				}
-
-				continue
-			}
-			if creditSummary.TotalAvailable < 0.1 {
+			if creditSummary.HardLimitUSD < 1 {
 				c.JSON(500, gin.H{
 					"error": "Not enough credits",
 				})

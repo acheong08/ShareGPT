@@ -8,26 +8,29 @@ import (
 	"github.com/acheong08/ShareGPT/typings"
 )
 
-func GetCredits(apiKey string) (typings.CreditSummary, error) {
+func GetCredits(apiKey string) (typings.BillingSubscription, error) {
 	// Make request
-	req, err := http.NewRequest("GET", "https://api.openai.com/dashboard/billing/credit_grants", nil)
+	req, err := http.NewRequest("GET", "https://api.openai.com/dashboard/billing/subscription", nil)
 	if err != nil {
-		return typings.CreditSummary{}, err
+		return typings.BillingSubscription{}, err
 	}
 	req.Header.Add("Authorization", "Bearer "+apiKey)
 	req.Header.Add("Content-Type", "application/json")
 	// Send request
 	response, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return typings.CreditSummary{}, err
+		return typings.BillingSubscription{}, err
 	}
 	defer response.Body.Close()
+	if response.StatusCode != 200 {
+		return typings.BillingSubscription{}, err
+	}
 	// Parse response
-	var creditSummary typings.CreditSummary
+	var creditSummary typings.BillingSubscription
 	// Map response to struct
 	err = json.NewDecoder(response.Body).Decode(&creditSummary)
 	if err != nil {
-		return typings.CreditSummary{}, err
+		return typings.BillingSubscription{}, err
 	}
 	return creditSummary, nil
 }
