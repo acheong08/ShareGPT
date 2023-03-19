@@ -252,6 +252,12 @@ func proxy(c *gin.Context) {
 			})
 			return
 		}
+		// Remove API key from api_keys array
+		for i, key := range api_keys {
+			if key == authorization {
+				api_keys = append(api_keys[:i], api_keys[i+1:]...)
+			}
+		}
 		assign_api_keys()
 	}
 	c.Header("Content-Type", response.Header.Get("Content-Type"))
