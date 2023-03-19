@@ -128,6 +128,14 @@ func main() {
 		})
 	})
 	router.POST("/v1/chat", proxy)
+	HOST := os.Getenv("HOST")
+	if HOST == "" {
+		HOST = "127.0.0.1"
+	}
+	PORT := os.Getenv("PORT")
+	if PORT == "" {
+		PORT = "8082"
+	}
 	endless.ListenAndServe(":"+os.Getenv("PORT"), router)
 }
 
