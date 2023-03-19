@@ -128,13 +128,14 @@ func proxy(c *gin.Context) {
 	url = "https://api.openai.com/v1/chat/completions"
 	request_method = c.Request.Method
 
-	// Read body and replace "gpt-4" with "gpt-3.5-turbo" via regex
+	// Read body
 	body, err := io.ReadAll(c.Request.Body)
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
-	body = regexp.MustCompile(`"model":\s*"gpt-4"`).ReplaceAll(body, []byte(`"model": "gpt-3.5-turbo"`))
+	// Replace *gpt-4* with *gpt-3.5-turbo*
+	body = regexp.MustCompile(`\*gpt-4\*`).ReplaceAll(body, []byte("*gpt-3.5-turbo*"))
 
 	request, err = http.NewRequest(request_method, url, bytes.NewReader(body))
 	if err != nil {
@@ -157,7 +158,12 @@ func proxy(c *gin.Context) {
 			println(err.Error())
 			return
 		}
+		counter := 0
 		for {
+			if counter > 5 {
+				c.JSON(500, gin.H{"error": "Failed to get valid key from Redis"})
+				return
+			}
 			// Check credit
 			creditSummary, err := checks.GetCredits(random_key)
 			if err != nil {
@@ -173,6 +179,7 @@ func proxy(c *gin.Context) {
 				if err != nil {
 					println(fmt.Errorf("error deleting key from Redis: %v", err))
 				}
+				counter += 1
 				continue
 			}
 			break
