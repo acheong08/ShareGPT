@@ -42,30 +42,36 @@ Response:
 
 ```json
 {
-  "object": "credit_summary",
-  "total_granted": 18,
-  "total_used": 1.850212,
-  "total_available": 16.149788,
-  "grants": {
-    "object": "list",
-    "data": [
-      {
-        "object": "credit_grant",
-        "id": "f7855bd6-d87d-4ab6-8a6b-1c1b5b5b5b5b",
-        "grant_amount": 18,
-        "used_amount": 1.850212,
-        "effective_at": 1670976000,
-        "expires_at": 1680307200
-      }
-    ]
+  "object": "billing_subscription",
+  "has_payment_method": true,
+  "canceled": false,
+  "canceled_at": null,
+  "delinquent": null,
+  "access_until": 1630454400,
+  "soft_limit": 1600000,
+  "hard_limit": 166666666,
+  "system_hard_limit": 166666666,
+  "soft_limit_usd": 96,
+  "hard_limit_usd": 9999.99996,
+  "system_hard_limit_usd": 9999.99996,
+  "plan": {
+    "title": "Pay-as-you-go",
+    "id": "payg"
   },
-  "error": {
-    "message": "",
-    "type": "",
-    "param": "",
-    "code": ""
-  }
+  "account_name": "",
+  "po_number": null,
+  "billing_email": null,
+  "tax_ids": null,
+  "billing_address": {
+    "city": "Penang",
+    "line1": "<REDACTED>",
+    "line2": null,
+    "country": "MY",
+    "postal_code": "<REDACTED>"
+  },
+  "business_address": null
 }
+
 ```
 
 ### POST /api_key/delete
