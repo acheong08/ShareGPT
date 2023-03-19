@@ -252,6 +252,7 @@ func proxy(c *gin.Context) {
 			})
 			return
 		}
+		assign_api_keys()
 	}
 	c.Header("Content-Type", response.Header.Get("Content-Type"))
 	// Get status code
