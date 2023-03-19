@@ -226,6 +226,16 @@ func proxy(c *gin.Context) {
 		return
 	}
 	defer response.Body.Close()
+	if response.StatusCode == 401 {
+		// Delete API key from Redis
+		err = rdb.Del(authorization).Err()
+		if err != nil {
+			c.JSON(500, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+	}
 	c.Header("Content-Type", response.Header.Get("Content-Type"))
 	// Get status code
 	c.Status(response.StatusCode)
