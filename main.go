@@ -136,7 +136,7 @@ func main() {
 	if PORT == "" {
 		PORT = "8082"
 	}
-	endless.ListenAndServe(":"+os.Getenv("PORT"), router)
+	endless.ListenAndServe(HOST+":"+PORT, router)
 }
 
 func proxy(c *gin.Context) {
