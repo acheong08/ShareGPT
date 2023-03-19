@@ -58,6 +58,12 @@ func main() {
 			"message": "pong",
 		})
 	})
+	// OPTIONS any route
+	router.OPTIONS("/*path", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"message": "ok",
+		})
+	})
 	router.POST("/api_key/submit", func(c *gin.Context) {
 		var api_key typings.APIKeySubmission
 		c.BindJSON(&api_key)
