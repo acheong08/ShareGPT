@@ -134,8 +134,12 @@ func proxy(c *gin.Context) {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
+	// Convert body to string
+	body_string := string(body)
 	// Replace *gpt-4* with *gpt-3.5-turbo*
-	body = regexp.MustCompile(`\*gpt-4\*`).ReplaceAll(body, []byte("*gpt-3.5-turbo*"))
+	body_string = regexp.MustCompile(`\*gpt-4\*`).ReplaceAllString(body_string, "*gpt-3.5-turbo*")
+	// Convert body back to bytes
+	body = []byte(body_string)
 
 	request, err = http.NewRequest(request_method, url, bytes.NewReader(body))
 	if err != nil {
