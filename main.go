@@ -2,10 +2,10 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
-	"regexp"
 
 	http "github.com/bogdanfinn/fhttp"
 	tls_client "github.com/bogdanfinn/tls-client"
@@ -128,18 +128,27 @@ func proxy(c *gin.Context) {
 	url = "https://api.openai.com/v1/chat/completions"
 	request_method = c.Request.Method
 
-	// Read body
-	body, err := io.ReadAll(c.Request.Body)
+	var body []byte
+	body, err = io.ReadAll(c.Request.Body)
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
-	// Convert body to string
-	body_string := string(body)
-	// Replace *gpt-4* with *gpt-3.5-turbo*
-	body_string = regexp.MustCompile(`\*gpt-4\*`).ReplaceAllString(body_string, "*gpt-3.5-turbo*")
-	// Convert body back to bytes
-	body = []byte(body_string)
+	// Convert to JSON
+	var jsonBody map[string]interface{}
+	err = json.Unmarshal(body, &jsonBody)
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+	// Set model to `gpt-3.5-turbo`
+	jsonBody["model"] = "gpt-3.5-turbo"
+	// Convert back to bytes
+	body, err = json.Marshal(jsonBody)
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
 
 	request, err = http.NewRequest(request_method, url, bytes.NewReader(body))
 	if err != nil {
