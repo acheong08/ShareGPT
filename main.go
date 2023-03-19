@@ -126,6 +126,27 @@ func main() {
 			"message": "API key deleted",
 		})
 	})
+	// Status check (takes random API key from Redis and returns its credit summary)
+	router.GET("/api_key/status", func(c *gin.Context) {
+		// Get random API key from Redis
+		key, err := rdb.RandomKey().Result()
+		if err != nil {
+			c.JSON(500, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+		// Get credit summary
+		creditSummary, err := checks.GetCredits(key)
+		if err != nil {
+			c.JSON(500, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+		c.JSON(200, creditSummary)
+	})
+
 	router.POST("/v1/chat", proxy)
 	HOST := os.Getenv("HOST")
 	if HOST == "" {
