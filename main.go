@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"os"
+	"regexp"
 
 	http "github.com/bogdanfinn/fhttp"
 	tls_client "github.com/bogdanfinn/tls-client"
@@ -132,7 +134,15 @@ func proxy(c *gin.Context) {
 	url = "https://api.openai.com/v1/chat/completions"
 	request_method = c.Request.Method
 
-	request, err = http.NewRequest(request_method, url, c.Request.Body)
+	// Read body and replace "gpt-4" with "gpt-3.5-turbo" via regex
+	body, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+	body = regexp.MustCompile(`"model":\s*"gpt-4"`).ReplaceAll(body, []byte(`"model": "gpt-3.5-turbo"`))
+
+	request, err = http.NewRequest(request_method, url, bytes.NewReader(body))
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
