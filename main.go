@@ -45,8 +45,14 @@ func init() {
 	})
 }
 
+func cors(c *gin.Context) {
+	c.Header("Access-Control-Allow-Origin", "*")
+	c.Header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+}
+
 func main() {
 	router := gin.Default()
+	router.Use(cors)
 	router.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"message": "pong",
