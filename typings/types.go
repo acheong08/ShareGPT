@@ -19,7 +19,7 @@ type BillingSubscription struct {
 	AccountName        string         `json:"account_name"`
 	PONumber           *string        `json:"po_number"`
 	BillingEmail       *string        `json:"billing_email"`
-	TaxIDs             *string        `json:"tax_ids"`
+	TaxIDs             *[]string      `json:"tax_ids"`
 	BillingAddress     BillingAddress `json:"billing_address"`
 	BusinessAddress    *string        `json:"business_address"`
 }
