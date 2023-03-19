@@ -257,7 +257,7 @@ func proxy(c *gin.Context) {
 	// Get status code
 	c.Status(response.StatusCode)
 	c.Stream(func(w io.Writer) bool {
-		// Write data to client using LineReader
+		// Write data to client
 		io.Copy(w, response.Body)
 		return false
 	})
