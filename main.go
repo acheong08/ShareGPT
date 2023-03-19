@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math/rand"
 	"os"
 
 	http "github.com/bogdanfinn/fhttp"
@@ -31,6 +32,7 @@ var (
 var (
 	redisAddr = os.Getenv("REDIS_ADDRESS")
 	redisPass = os.Getenv("REDIS_PASSWORD")
+	api_keys  []string
 )
 
 var rdb *redis.Client
@@ -44,11 +46,26 @@ func init() {
 		Password: redisPass,
 		DB:       0,
 	})
+	// Fetch all keys from redis
+	keys, err := rdb.Keys("*").Result()
+	if err != nil {
+		panic(err)
+	}
+	api_keys = keys
 }
 
 func cors(c *gin.Context) {
 	c.Header("Access-Control-Allow-Origin", "*")
 	c.Header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+}
+
+func assign_api_keys() {
+	// Fetch all keys from redis
+	keys, err := rdb.Keys("*").Result()
+	if err != nil {
+		return
+	}
+	api_keys = keys
 }
 
 func main() {
@@ -98,6 +115,8 @@ func main() {
 				println(fmt.Errorf("error saving to Redis: %v", err))
 			}
 		}(creditSummary)
+
+		assign_api_keys()
 	})
 	router.POST("/api_key/delete", func(c *gin.Context) {
 		// Delete API key from Redis
@@ -125,6 +144,8 @@ func main() {
 		c.JSON(200, gin.H{
 			"message": "API key deleted",
 		})
+		assign_api_keys()
+
 	})
 	// Status check (takes random API key from Redis and returns its credit summary)
 	router.GET("/api_key/status", func(c *gin.Context) {
@@ -145,6 +166,7 @@ func main() {
 			return
 		}
 		c.JSON(200, creditSummary)
+		assign_api_keys()
 	})
 
 	router.POST("/v1/chat", proxy)
@@ -206,13 +228,8 @@ func proxy(c *gin.Context) {
 	// Authorization
 	var authorization string
 	if c.Request.Header.Get("Authorization") == "" {
-		// Set authorization header from Redis
-		random_key, err := rdb.RandomKey().Result()
-		if err != nil {
-			c.JSON(500, gin.H{"error": "Failed to get random key from Redis"})
-			println(err.Error())
-			return
-		}
+		// Choose random API key from api_keys array
+		random_key := api_keys[rand.Intn(len(api_keys))]
 		authorization = "Bearer " + random_key
 	} else {
 		// Set authorization header from request
