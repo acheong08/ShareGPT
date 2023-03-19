@@ -257,6 +257,7 @@ func (lr *LineReader) Read(p []byte) (int, error) {
 	if lr.scanner.Scan() {
 		line := lr.scanner.Text()
 		if lr.onLine(line) {
+			line += "\n" // Append newline character
 			n := copy(p, line)
 			return n, nil
 		} else {
