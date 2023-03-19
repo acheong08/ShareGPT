@@ -213,33 +213,6 @@ func proxy(c *gin.Context) {
 			println(err.Error())
 			return
 		}
-		counter := 0
-		for {
-			if counter > 5 {
-				c.JSON(500, gin.H{"error": "Failed to get valid key from Redis"})
-				return
-			}
-			// Check credit
-			creditSummary, err := checks.GetCredits(random_key)
-			if err != nil {
-				c.JSON(500, gin.H{"error": "OpenAI failed"})
-				return
-			}
-			if creditSummary.HardLimitUSD < 1 {
-				c.JSON(500, gin.H{
-					"error": "Not enough credits",
-				})
-				// Remove key from Redis
-				err = rdb.Del(random_key).Err()
-				if err != nil {
-					println(fmt.Errorf("error deleting key from Redis: %v", err))
-				}
-				counter += 1
-				continue
-			}
-			break
-		}
-
 		authorization = "Bearer " + random_key
 	} else {
 		// Set authorization header from request
