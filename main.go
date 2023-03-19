@@ -13,6 +13,7 @@ import (
 
 	"github.com/acheong08/ShareGPT/checks"
 	"github.com/acheong08/ShareGPT/typings"
+	"github.com/fvbock/endless"
 	gin "github.com/gin-gonic/gin"
 	"github.com/go-redis/redis"
 )
@@ -127,7 +128,7 @@ func main() {
 		})
 	})
 	router.POST("/v1/chat", proxy)
-	router.Run()
+	endless.ListenAndServe(":"+os.Getenv("PORT"), router)
 }
 
 func proxy(c *gin.Context) {

@@ -5,6 +5,7 @@ go 1.20
 require (
 	github.com/bogdanfinn/fhttp v0.5.19
 	github.com/bogdanfinn/tls-client v1.3.7
+	github.com/fvbock/endless v0.0.0-20170109170031-447134032cb6
 	github.com/gin-gonic/gin v1.9.0
 	github.com/go-redis/redis v6.15.9+incompatible
 )
