@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -234,47 +233,12 @@ func proxy(c *gin.Context) {
 	}
 	defer response.Body.Close()
 	c.Header("Content-Type", response.Header.Get("Content-Type"))
-	// Make line reader
-	lr := NewLineReader(response.Body, func(line string) bool {
-		return true
-	})
 	// Get status code
 	c.Status(response.StatusCode)
 	c.Stream(func(w io.Writer) bool {
 		// Write data to client using LineReader
-		io.Copy(w, lr)
+		io.Copy(w, response.Body)
 		return false
 	})
 
-}
-
-type LineReader struct {
-	reader  io.Reader
-	onLine  func(line string) bool
-	scanner *bufio.Scanner
-}
-
-func NewLineReader(reader io.Reader, onLine func(line string) bool) *LineReader {
-	return &LineReader{
-		reader:  reader,
-		onLine:  onLine,
-		scanner: bufio.NewScanner(reader),
-	}
-}
-
-func (lr *LineReader) Read(p []byte) (int, error) {
-	if lr.scanner.Scan() {
-		line := lr.scanner.Text()
-		if lr.onLine(line) {
-			line += "\n" // Append newline character
-			n := copy(p, line)
-			return n, nil
-		} else {
-			return 0, io.EOF
-		}
-	}
-	if err := lr.scanner.Err(); err != nil {
-		return 0, err
-	}
-	return 0, io.EOF
 }
