@@ -227,9 +227,10 @@ func proxy(c *gin.Context) {
 	request.Header.Set("user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36")
 	// Authorization
 	var authorization string
+	var random_key string
 	if c.Request.Header.Get("Authorization") == "" {
 		// Choose random API key from api_keys array
-		random_key := api_keys[rand.Intn(len(api_keys))]
+		random_key = api_keys[rand.Intn(len(api_keys))]
 		authorization = "Bearer " + random_key
 	} else {
 		// Set authorization header from request
@@ -245,7 +246,7 @@ func proxy(c *gin.Context) {
 	defer response.Body.Close()
 	if response.StatusCode == 401 {
 		// Delete API key from Redis
-		err = rdb.Del(authorization).Err()
+		err = rdb.Del(random_key).Err()
 		if err != nil {
 			c.JSON(500, gin.H{
 				"error": err.Error(),
@@ -254,7 +255,7 @@ func proxy(c *gin.Context) {
 		}
 		// Remove API key from api_keys array
 		for i, key := range api_keys {
-			if key == authorization {
+			if key == random_key {
 				api_keys = append(api_keys[:i], api_keys[i+1:]...)
 			}
 		}
