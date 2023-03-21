@@ -229,7 +229,7 @@ func proxy(c *gin.Context) {
 	var authorization string
 	var random_key string
 	if c.Request.Header.Get("Authorization") == "" {
-		if api_keys == nil {
+		if len(api_keys) == 0 {
 			c.JSON(
 				500,
 				gin.H{
