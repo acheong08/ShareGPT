@@ -92,14 +92,14 @@ func main() {
 			return
 		}
 		// Check if API key is valid
-		creditSummary, err := checks.GetCredits(api_key.APIKey)
+		creditSummary, err := checks.GetTotalCredits(api_key.APIKey)
 		if err != nil {
 			c.JSON(500, gin.H{
 				"error": err.Error(),
 			})
 			return
 		}
-		if creditSummary.HardLimitUSD < 1 {
+		if creditSummary < 1 {
 			c.JSON(400, gin.H{
 				"error": "Not enough credits",
 			})
@@ -108,9 +108,9 @@ func main() {
 		// Return credit summary
 		c.JSON(200, creditSummary)
 		// Save to Redis
-		go func(creditSummary typings.BillingSubscription) {
+		go func(creditSummary float64) {
 			// Save to Redis without expiration
-			err := rdb.Set(api_key.APIKey, creditSummary.HardLimitUSD, 0).Err()
+			err := rdb.Set(api_key.APIKey, creditSummary, 0).Err()
 			if err != nil {
 				println(fmt.Errorf("error saving to Redis: %v", err))
 			}
@@ -158,7 +158,7 @@ func main() {
 			return
 		}
 		// Get credit summary
-		creditSummary, err := checks.GetCredits(key)
+		creditSummary, err := checks.GetTotalCredits(key)
 		if err != nil {
 			c.JSON(500, gin.H{
 				"error": err.Error(),
@@ -267,14 +267,14 @@ func proxy(c *gin.Context) {
 	}
 	if response.StatusCode == 429 {
 		// Check HardLimitUsd
-		creditSummary, err := checks.GetCredits(random_key)
+		creditSummary, err := checks.GetTotalCredits(random_key)
 		if err != nil {
 			c.JSON(500, gin.H{
 				"error": err.Error(),
 			})
 			return
 		}
-		if creditSummary.HardLimitUSD == 0 {
+		if creditSummary == 0 {
 			// Remove from Redis
 			err = rdb.Del(random_key).Err()
 			if err != nil {
