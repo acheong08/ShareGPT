@@ -229,6 +229,15 @@ func proxy(c *gin.Context) {
 	var authorization string
 	var random_key string
 	if c.Request.Header.Get("Authorization") == "" {
+		if api_keys == nil {
+			c.JSON(
+				500,
+				gin.H{
+					"error": "No API keys found",
+				},
+			)
+			return
+		}
 		// Choose random API key from api_keys array
 		random_key = api_keys[rand.Intn(len(api_keys))]
 		authorization = "Bearer " + random_key
