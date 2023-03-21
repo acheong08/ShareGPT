@@ -254,12 +254,28 @@ func proxy(c *gin.Context) {
 			return
 		}
 		// Remove API key from api_keys array
-		for i, key := range api_keys {
-			if key == random_key {
-				api_keys = append(api_keys[:i], api_keys[i+1:]...)
-			}
-		}
 		assign_api_keys()
+	}
+	if response.StatusCode == 429 {
+		// Check HardLimitUsd
+		creditSummary, err := checks.GetCredits(random_key)
+		if err != nil {
+			c.JSON(500, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+		if creditSummary.HardLimitUSD == 0 {
+			// Remove from Redis
+			err = rdb.Del(random_key).Err()
+			if err != nil {
+				c.JSON(500, gin.H{
+					"error": err.Error(),
+				})
+				return
+			}
+			assign_api_keys()
+		}
 	}
 	c.Header("Content-Type", response.Header.Get("Content-Type"))
 	// Get status code
