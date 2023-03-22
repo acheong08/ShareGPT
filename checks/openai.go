@@ -61,16 +61,18 @@ func GetGrants(apiKey string) (typings.CreditSummary, error) {
 }
 
 func GetTotalCredits(apiKey string) (float64, error) {
-	creditSummary, err := GetGrants(apiKey)
+	grants, err := GetGrants(apiKey)
 	if err != nil {
 		return 0, err
 	}
 	var totalCredits float64 = 0
-	totalCredits += creditSummary.TotalAvailable
-	// billingSummary, err := GetCredits(apiKey)
-	// if err != nil {
-	// 	return 0, err
-	// }
-	// totalCredits += billingSummary.HardLimitUSD
+	totalCredits += grants.TotalAvailable
+	if totalCredits == 0 {
+		billingSummary, err := GetCredits(apiKey)
+		if err != nil {
+			return 0, err
+		}
+		totalCredits += billingSummary.HardLimitUSD
+	}
 	return totalCredits, nil
 }
