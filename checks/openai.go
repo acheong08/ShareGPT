@@ -65,14 +65,13 @@ func GetTotalCredits(apiKey string) (float64, error) {
 	if err != nil {
 		return 0, err
 	}
-	var totalCredits float64 = 0
-	totalCredits -= grants.TotalUsed
-	if totalCredits == 0 {
-		billingSummary, err := GetCredits(apiKey)
-		if err != nil {
-			return 0, err
-		}
-		totalCredits += billingSummary.HardLimitUSD
+	grant_remaining := grants.TotalAvailable
+	subscription, err := GetCredits(apiKey)
+	if err != nil {
+		return 0, err
 	}
-	return totalCredits, nil
+	if subscription.HardLimitUSD < 19 {
+		return grant_remaining, nil
+	}
+	return subscription.SoftLimitUSD, nil
 }

@@ -229,7 +229,7 @@ func proxy(c *gin.Context) {
 	var authorization string
 	var random_key string
 	if c.Request.Header.Get("Authorization") == "" {
-		if len(api_keys) == 0 {
+		if len(api_keys) <= 0 {
 			c.JSON(
 				500,
 				gin.H{
@@ -274,7 +274,7 @@ func proxy(c *gin.Context) {
 			})
 			return
 		}
-		if creditSummary == 0 {
+		if creditSummary <= 0 {
 			// Remove from Redis
 			err = rdb.Del(random_key).Err()
 			if err != nil {
