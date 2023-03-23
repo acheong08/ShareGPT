@@ -38,41 +38,7 @@ Request:
 { "api_key": "..." }
 ```
 
-Response:
-
-```json
-{
-  "object": "billing_subscription",
-  "has_payment_method": true,
-  "canceled": false,
-  "canceled_at": null,
-  "delinquent": null,
-  "access_until": 1630454400,
-  "soft_limit": 1600000,
-  "hard_limit": 166666666,
-  "system_hard_limit": 166666666,
-  "soft_limit_usd": 96,
-  "hard_limit_usd": 9999.99996,
-  "system_hard_limit_usd": 9999.99996,
-  "plan": {
-    "title": "Pay-as-you-go",
-    "id": "payg"
-  },
-  "account_name": "",
-  "po_number": null,
-  "billing_email": null,
-  "tax_ids": null,
-  "billing_address": {
-    "city": "Penang",
-    "line1": "<REDACTED>",
-    "line2": null,
-    "country": "MY",
-    "postal_code": "<REDACTED>"
-  },
-  "business_address": null
-}
-
-```
+Response: A float64 with the amount of credit remaining
 
 ### POST /api_key/delete
 
