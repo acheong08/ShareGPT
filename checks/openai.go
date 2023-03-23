@@ -66,7 +66,7 @@ func GetTotalCredits(apiKey string) (float64, error) {
 		return 0, err
 	}
 	var totalCredits float64 = 0
-	totalCredits += grants.TotalAvailable
+	totalCredits -= grants.TotalUsed
 	if totalCredits == 0 {
 		billingSummary, err := GetCredits(apiKey)
 		if err != nil {
